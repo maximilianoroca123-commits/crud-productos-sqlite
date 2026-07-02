@@ -26,3 +26,38 @@ def mostrar_hora():
     hora_actual = datetime.now()
     hora_formateada = hora_actual.strftime(f"%d/%m/%Y - %H:%M:%S")
     return hora_formateada
+
+def guardar_productos(conexion, productos):
+    cursor = conexion.cursor()
+    contador_guardados = 0
+
+    for producto in productos:
+        cursor.execute(
+            """
+            INSERT INTO productos (nombre, categoria, precio, stock)
+            VALUES (?, ?, ?, ?)
+            """,
+            (
+                producto["nombre"],
+                producto["categoria"],
+                producto["precio"],
+                producto["stock"]
+            )
+        )
+        contador_guardados += 1
+
+    conexion.commit()
+    return contador_guardados
+
+def obtener_producto_por_nombre(conexion, nombre):
+
+    cursor = conexion.cursor()
+
+    cursor.execute(
+        "SELECT * FROM productos WHERE nombre = ?",
+        (nombre,)
+    )
+
+    resultado = cursor.fetchone()
+
+    return resultado

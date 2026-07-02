@@ -55,18 +55,6 @@ def buscar(conexion, filtros):
     resultado = cursor.fetchall()
     return resultado
 
-def obtener_producto_por_nombre(conexion, nombre):
-
-    cursor = conexion.cursor()
-
-    cursor.execute(
-        "SELECT * FROM productos WHERE nombre = ?",
-        (nombre,)
-    )
-
-    resultado = cursor.fetchone()
-
-    return resultado
 
 def obtener_todos_los_productos(conexion):
     cursor = conexion.cursor()

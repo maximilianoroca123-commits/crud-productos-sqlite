@@ -3,6 +3,7 @@ from presentacion import pausar, mostrar_resultados
 from busqueda import crear_filtros, buscar, obtener_todos_los_productos
 from persistencia import registrar_log
 from crud import registrar_producto, eliminar_producto, actualizar_producto
+from importador import importar_productos_api
 
 def menu(conexion):
     while True:
@@ -11,11 +12,12 @@ def menu(conexion):
         print("3. Crear producto")
         print("4. Eliminar producto")
         print("5. Actualizar producto")
-        print("6. Salir")
+        print("6. Importar productos desde API")
+        print("7. Salir")
 
         opcion = pedir_opcion(
             "Ingrese una opcion: ",
-            ["1", "2", "3", "4", "5", "6"]
+            ["1", "2", "3", "4", "5", "6", "7"]
         )
 
         if opcion == "1":
@@ -62,5 +64,9 @@ def menu(conexion):
             pausar()
 
         elif opcion == "6":
+            importar_productos_api(conexion)
+            pausar()
+
+        elif opcion == "7":
             print("Programa finalizado")
             break

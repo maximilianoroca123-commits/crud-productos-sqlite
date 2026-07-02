@@ -1,6 +1,7 @@
 from config import CATEGORIAS_VALIDAS
 from validaciones import pedir_opcion, pedir_numero, solicitar_nombre, solicitar_id
-from busqueda import obtener_producto_por_id, obtener_producto_por_nombre
+from busqueda import obtener_producto_por_id
+from persistencia import obtener_producto_por_nombre
 
 
 def crear_producto(nombre_producto):
