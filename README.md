@@ -25,3 +25,26 @@ Proyecto realizado en Python.
 
 El sistema permite importar productos desde una API externa.  
 Los productos obtenidos desde la API se normalizan al formato interno del sistema, se validan, se filtran duplicados y finalmente se almacenan en SQLite.
+
+## Arquitectura
+
+config.py
+Configuración del sistema.
+
+api.py
+Comunicación con APIs externas.
+
+transformaciones.py
+Normalización de datos.
+
+filtros.py
+Filtrado de productos.
+
+persistencia.py
+Acceso a SQLite.
+
+importador.py
+Coordinación del proceso de importación.
+
+main.py
+Punto de entrada del programa.
