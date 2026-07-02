@@ -2,6 +2,9 @@
 
 Proyecto realizado en Python.
 
+## Objetivo del proyecto
+Proyecto desarrollado como práctica de programación orientada a la modularización, persistencia con SQLite e integración con APIs REST.
+
 ## Características
 
 - Crear productos
