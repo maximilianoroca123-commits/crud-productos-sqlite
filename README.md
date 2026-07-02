@@ -24,4 +24,4 @@ Proyecto realizado en Python.
 ## Importación desde API
 
 El sistema permite importar productos desde una API externa.  
-Los datos recibidos se transforman al formato interno del programa, se filtran duplicados y luego se guardan en SQLite.
+Los productos obtenidos desde la API se normalizan al formato interno del sistema, se validan, se filtran duplicados y finalmente se almacenan en SQLite.
