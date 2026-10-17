@@ -1,3 +1,6 @@
+# Presentación de resultados en la terminal del CRUD de consola.
+
+
 def mostrar_resultados(resultados):
     if not resultados:
         print("No hay resultados")
@@ -10,6 +13,7 @@ def mostrar_resultados(resultados):
         print(f"Precio: {resultado[3]}")
         print(f"Stock: {resultado[4]}")
         print("----------------")
+
 
 def pausar():
     input("Presione ENTER para continuar...")

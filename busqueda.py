@@ -1,6 +1,10 @@
-from validaciones import pedir_opcion, pedir_numero
-from config import CATEGORIAS_VALIDAS
+# Filtros y consultas SQL del CRUD de consola.
 
+from config import CATEGORIAS_VALIDAS
+from validaciones import pedir_opcion, pedir_numero
+
+
+# Recoge claves y operadores permitidos desde el menú.
 def crear_filtros():
     operadores_validos = ["==", ">", "<", ">=", "<="]
     claves_texto_libre = ["nombre"]
@@ -33,7 +37,7 @@ def crear_filtros():
     return filtros
 
 
-
+# Combina condiciones con AND y pasa los valores como parámetros SQL.
 def buscar(conexion, filtros):
     if not filtros:
         return []
@@ -56,17 +60,17 @@ def buscar(conexion, filtros):
     return resultado
 
 
+# Devuelve las filas de la tabla para mostrarlas en consola.
 def obtener_todos_los_productos(conexion):
     cursor = conexion.cursor()
     cursor.execute("""SELECT * FROM productos""")
     resultado = cursor.fetchall()
     return resultado
 
+
+# Devuelve una fila o None si el ID no existe.
 def obtener_producto_por_id(conexion, id_producto):
     cursor = conexion.cursor()
-    cursor.execute(
-        "SELECT * FROM productos WHERE id = ?",
-        (id_producto,)
-    )
+    cursor.execute("SELECT * FROM productos WHERE id = ?", (id_producto,))
     resultado = cursor.fetchone()
     return resultado

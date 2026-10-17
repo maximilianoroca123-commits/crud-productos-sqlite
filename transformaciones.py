@@ -1,11 +1,17 @@
+# Adaptación de campos de la API externa al formato del importador.
+
 from config import CAMPOS_POSIBLES
 
+
+# Toma el primer nombre de campo reconocido en la respuesta externa.
 def obtener_valor_campo(producto_api, campos_posibles):
     for campo in campos_posibles:
         if campo in producto_api:
             return producto_api[campo]
     return None
 
+
+# Adapta un producto y descarta los que carecen de campos necesarios.
 def transformar_producto(producto_api):
     nombre = obtener_valor_campo(producto_api, CAMPOS_POSIBLES["nombre"])
     categoria = obtener_valor_campo(producto_api, CAMPOS_POSIBLES["categoria"])
@@ -19,10 +25,12 @@ def transformar_producto(producto_api):
         "nombre": nombre,
         "categoria": categoria,
         "precio": precio,
-        "stock": stock
-        }
+        "stock": stock,
+    }
     return producto
 
+
+# Transforma el lote y calcula el resumen de resultados.
 def transformar_productos(productos_api):
     productos_normalizados = []
     recibidos = 0
@@ -37,8 +45,8 @@ def transformar_productos(productos_api):
         else:
             invalidos += 1
     return {
-    "productos_normalizados": productos_normalizados,
-    "recibidos": recibidos,
-    "normalizados": normalizados,
-    "invalidos": invalidos
-}
+        "productos_normalizados": productos_normalizados,
+        "recibidos": recibidos,
+        "normalizados": normalizados,
+        "invalidos": invalidos,
+    }

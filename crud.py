@@ -1,13 +1,15 @@
-from config import CATEGORIAS_VALIDAS
-from validaciones import pedir_opcion, pedir_numero, solicitar_nombre, solicitar_id
+# Operaciones interactivas del CRUD de consola.
+
 from busqueda import obtener_producto_por_id
+from config import CATEGORIAS_VALIDAS
 from persistencia import obtener_producto_por_nombre
+from validaciones import pedir_opcion, pedir_numero, solicitar_nombre, solicitar_id
 
 
+# Recoge los campos de un producto nuevo.
 def crear_producto(nombre_producto):
     categoria_producto = pedir_opcion(
-        "Ingrese categoria del producto: ",
-        CATEGORIAS_VALIDAS
+        "Ingrese categoria del producto: ", CATEGORIAS_VALIDAS
     )
 
     precio_producto = pedir_numero("Ingrese el precio del producto: ")
@@ -17,11 +19,13 @@ def crear_producto(nombre_producto):
         "nombre": nombre_producto,
         "categoria": categoria_producto,
         "precio": precio_producto,
-        "stock": stock_producto
+        "stock": stock_producto,
     }
 
     return producto
 
+
+# Comprueba el nombre, inserta el producto y confirma el guardado.
 def registrar_producto(conexion):
     nombre = solicitar_nombre()
     producto_existente = obtener_producto_por_nombre(conexion, nombre)
@@ -30,34 +34,38 @@ def registrar_producto(conexion):
     nuevo_producto = crear_producto(nombre)
     cursor = conexion.cursor()
     cursor.execute(
-    """
-    INSERT INTO productos (nombre, categoria, precio, stock)
-    VALUES (?, ?, ?, ?)
-    """,
-    (nuevo_producto["nombre"], nuevo_producto["categoria"], nuevo_producto["precio"], nuevo_producto["stock"])
-)
+        """
+            INSERT INTO productos (nombre, categoria, precio, stock)
+            VALUES (?, ?, ?, ?)
+            """,
+        (
+            nuevo_producto["nombre"],
+            nuevo_producto["categoria"],
+            nuevo_producto["precio"],
+            nuevo_producto["stock"],
+        ),
+    )
     nuevo_producto["id"] = cursor.lastrowid
     conexion.commit()
     return nuevo_producto
 
 
+# Busca el ID solicitado y elimina su fila.
 def eliminar_producto(conexion):
     id_producto = solicitar_id()
     producto_existente = obtener_producto_por_id(conexion, id_producto)
 
     if producto_existente is None:
         return None
-    
+
     cursor = conexion.cursor()
-    cursor.execute(
-        "DELETE FROM productos WHERE id = ?",
-        (id_producto,)
-    )
+    cursor.execute("DELETE FROM productos WHERE id = ?", (id_producto,))
     conexion.commit()
 
     return producto_existente
 
 
+# Actualiza los campos elegidos y confirma si hubo cambios.
 def actualizar_producto(conexion):
     id_producto = solicitar_id()
     producto = obtener_producto_por_id(conexion, id_producto)
@@ -76,22 +84,28 @@ def actualizar_producto(conexion):
 
         if nuevo_precio == "si":
             precio_actualizado = pedir_numero("Ingrese nuevo precio: ")
-            cursor.execute("""UPDATE productos
-                           SET precio = ?
-                           WHERE id = ?""",
-                           (precio_actualizado, id_producto)
-                           )
+            cursor.execute(
+                """
+                    UPDATE productos
+                    SET precio = ?
+                    WHERE id = ?
+                    """,
+                (precio_actualizado, id_producto),
+            )
             modificado = True
 
         nuevo_stock = pedir_opcion("Desea actualizar el stock?: ", ["si", "no"])
 
         if nuevo_stock == "si":
             stock_actualizado = pedir_numero("Ingrese nuevo stock: ")
-            cursor.execute("""UPDATE productos
-                           SET stock = ?
-                           WHERE id = ?""",
-                           (stock_actualizado, id_producto)
-                           )
+            cursor.execute(
+                """
+                    UPDATE productos
+                    SET stock = ?
+                    WHERE id = ?
+                    """,
+                (stock_actualizado, id_producto),
+            )
             modificado = True
     if modificado:
         conexion.commit()

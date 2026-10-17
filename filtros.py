@@ -1,5 +1,9 @@
+# Selección de productos nuevos para la importación externa.
+
 from persistencia import obtener_producto_por_nombre
 
+
+# Separa los productos nuevos de los nombres ya guardados.
 def filtrar_productos_nuevos(conexion, productos):
     productos_nuevos = []
     nuevos = 0
@@ -12,22 +16,7 @@ def filtrar_productos_nuevos(conexion, productos):
         else:
             duplicados += 1
     return {
-    "productos_nuevos": productos_nuevos,
-    "nuevos": nuevos,
-    "duplicados": duplicados
-}
-
-def filtrar_productos(productos,
-        categoria: str | None = None,
-        precio_min: int | None = None,
-        precio_max: int | None = None):
-    productos_filtrados = []
-
-    for producto in productos:
-        if (
-            (categoria is None or producto["categoria"] == categoria)
-            and (precio_min is None or producto["precio"] >= precio_min)
-            and (precio_max is None or producto["precio"] <= precio_max)
-        ):
-            productos_filtrados.append(producto)
-    return productos_filtrados
+        "productos_nuevos": productos_nuevos,
+        "nuevos": nuevos,
+        "duplicados": duplicados,
+    }

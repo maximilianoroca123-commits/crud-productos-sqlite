@@ -1,9 +1,12 @@
-from validaciones import pedir_opcion
-from presentacion import pausar, mostrar_resultados
+# Menú del CRUD de consola y registro de sus operaciones.
+
 from busqueda import crear_filtros, buscar, obtener_todos_los_productos
-from persistencia import registrar_log
 from crud import registrar_producto, eliminar_producto, actualizar_producto
 from importador import importar_productos_api
+from persistencia import registrar_log
+from presentacion import pausar, mostrar_resultados
+from validaciones import pedir_opcion
+
 
 def menu(conexion):
     while True:
@@ -16,8 +19,7 @@ def menu(conexion):
         print("7. Salir")
 
         opcion = pedir_opcion(
-            "Ingrese una opcion: ",
-            ["1", "2", "3", "4", "5", "6", "7"]
+            "Ingrese una opcion: ", ["1", "2", "3", "4", "5", "6", "7"]
         )
 
         if opcion == "1":
@@ -35,7 +37,9 @@ def menu(conexion):
             resultado = registrar_producto(conexion)
 
             if resultado:
-                registrar_log(f"Producto creado: ID {resultado['id']} - {resultado['nombre']}")
+                registrar_log(
+                    f"Producto creado: ID {resultado['id']} - {resultado['nombre']}"
+                )
                 print(f"Producto creado: ID {resultado['id']} - {resultado['nombre']}")
             else:
                 print("El producto ya existe")
@@ -56,7 +60,9 @@ def menu(conexion):
             resultado = actualizar_producto(conexion)
 
             if resultado:
-                registrar_log(f"Producto actualizado: ID {resultado[0]} - {resultado[1]}")
+                registrar_log(
+                    f"Producto actualizado: ID {resultado[0]} - {resultado[1]}"
+                )
                 print(f"Producto actualizado: ID {resultado[0]} - {resultado[1]}")
             else:
                 print("Se canceló la actualización o no se encontró el producto")

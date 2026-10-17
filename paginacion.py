@@ -1,11 +1,7 @@
-def paginar_productos(
-    productos_filtrados, 
-    pagina: int = 1,
-    limite: int = 10):
-        inicio = (pagina - 1) * limite
-        fin = inicio + limite
-        productos_pagina = productos_filtrados[inicio:fin]
-        return productos_pagina
+# Cálculo de metadatos a partir del total filtrado.
+
+
+# Incluye una página adicional cuando hay productos sobrantes.
 def calcular_cantidad_paginas(total: int, limite: int):
     cantidad_de_paginas = total // limite
     productos_sobrantes = total % limite

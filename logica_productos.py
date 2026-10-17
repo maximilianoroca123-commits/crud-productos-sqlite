@@ -1,23 +1,19 @@
-def generar_id(productos):
-    mayor_id = 0
+# Construcción y actualización de diccionarios de productos.
 
-    for existente in productos:
-        if mayor_id < existente["id"]:
-            mayor_id = existente["id"]
 
-    mayor_id += 1
-    return mayor_id
-
+# Reúne el ID y los campos en el formato usado por la API.
 def construir_producto(id, nombre, categoria, precio, stock):
     nuevo_producto = {
         "id": id,
         "nombre": nombre,
         "categoria": categoria,
         "precio": precio,
-        "stock": stock
+        "stock": stock,
     }
     return nuevo_producto
 
+
+# Copia el producto antes de aplicar los campos enviados.
 def aplicar_cambios_producto(producto, cambios):
     producto_actualizado = producto.copy()
     if "stock" in cambios:
