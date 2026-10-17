@@ -1,86 +1,36 @@
-from typing import Annotated, Literal
-from busqueda import obtener_producto_por_id
-from fastapi import FastAPI, HTTPException
-from pydantic import (
-    BaseModel,
-    BeforeValidator,
-    ConfigDict,
-    Field,
-    StringConstraints,
-)
-
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import JSONResponse
+from modelos import ProductoCrear, ProductoActualizar
 from config import CATEGORIAS_VALIDAS
+from paginacion import calcular_cantidad_paginas
+from logica_productos import aplicar_cambios_producto
+from repositorio_sqlite import obtener_producto_por_id, obtener_producto_por_nombre, crear_producto, guardar_producto_actualizado, eliminar_producto as eliminar_producto_sqlite, contar_productos, obtener_productos_paginados
+from errores import ProductoDuplicadoError, ProductoNoEncontradoError, ErrorPersistencia
+import logging
 
-
-# Aplicación FastAPI
+logger = logging.getLogger("uvicorn.error")
 
 app = FastAPI()
 
+@app.exception_handler(ErrorPersistencia)
+async def manejar_error_persistencia(
+    request: Request,
+    error: ErrorPersistencia,
+):
+    logger.error(
+        "Fallo de persistencia en %s %s",
+        request.method,
+        request.url.path,
+        exc_info=(type(error), error, error.__traceback__),
+    )
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "No se pudo completar la operación"},
+    )
 
 # Datos en memoria
 
-productos = [
-    {
-        "id": 1,
-        "nombre": "Mouse",
-        "categoria": "tecnologia",
-        "precio": 8500,
-        "stock": 5,
-    },
-    {
-        "id": 2,
-        "nombre": "teclado",
-        "categoria": "tecnologia",
-        "precio": 7500,
-        "stock": 5,
-    },
-]
-
-
 # Funciones auxiliares
-
-def generar_id(productos):
-    mayor_id = 0
-
-    for existente in productos:
-        if mayor_id < existente["id"]:
-            mayor_id = existente["id"]
-
-    mayor_id += 1
-    return mayor_id
-
-
-def normalizar_categoria(valor):
-    if isinstance(valor, str):
-        return valor.strip().lower()
-
-    return valor
-
-# Modelos de entrada
-
-class ProductoCrear(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    nombre: Annotated[
-        str,
-        StringConstraints(strip_whitespace=True, min_length=1),
-    ]
-
-    categoria: Annotated[
-        Literal["alimento", "tecnologia", "libreria"],
-        BeforeValidator(normalizar_categoria),
-    ]
-
-    precio: int = Field(gt=0, strict=True)
-    stock: int = Field(default=0, ge=0, strict=True)
-
-
-class ProductoActualizar(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    precio: int = Field(default=1, gt=0, strict=True)
-    stock: int = Field(default=0, ge=0, strict=True)
-
 
 # GET: listar, filtrar y paginar productos
 
@@ -94,17 +44,23 @@ def listar_productos(
 ):
     # Validaciones de entrada
 
-    if pagina <= 0 or limite <= 0:
+    if pagina < 1:
+        raise HTTPException(
+        status_code=422,
+        detail="pagina debe ser mayor o igual a 1",
+        )
+
+    if not 1 <= limite <= 10:
         raise HTTPException(
             status_code=422,
-            detail="pagina y limite deben ser mayores que 0",
-        )
+            detail="limite debe estar entre 1 y 10",
+            )
 
     if categoria is not None and categoria not in CATEGORIAS_VALIDAS:
         raise HTTPException(
             status_code=422,
             detail="categoria invalida",
-        )
+            )
 
     if precio_min is not None and precio_min < 0:
         raise HTTPException(
@@ -127,34 +83,13 @@ def listar_productos(
             status_code=422,
             detail="precio_min no puede ser mayor que precio_max",
         )
-
-    # Filtrado
-
-    productos_filtrados = []
-
-    for producto in productos:
-        if (
-            (categoria is None or producto["categoria"] == categoria)
-            and (precio_min is None or producto["precio"] >= precio_min)
-            and (precio_max is None or producto["precio"] <= precio_max)
-        ):
-            productos_filtrados.append(producto)
-
-    # Paginación
-
-    inicio = (pagina - 1) * limite
-    fin = inicio + limite
-    productos_pagina = productos_filtrados[inicio:fin]
-
+    
+    productos_pagina = obtener_productos_paginados(pagina, limite, categoria, precio_min, precio_max)
+    
     # Metadatos
 
-    total = len(productos_filtrados)
-    cantidad_de_paginas = total // limite
-    productos_sobrantes = total % limite
-
-    if productos_sobrantes != 0:
-        cantidad_de_paginas += 1
-
+    total = contar_productos(categoria, precio_min, precio_max)
+    cantidad_de_paginas = calcular_cantidad_paginas(total, limite)
     return {
         "productos": productos_pagina,
         "total": total,
@@ -168,7 +103,7 @@ def listar_productos(
 
 @app.get("/productos/{id}")
 def consultar_producto(id: int):
-    producto_existente = obtener_producto_por_id(id, productos)
+    producto_existente = obtener_producto_por_id(id)
     if producto_existente is None:
         raise HTTPException(
             status_code=404,
@@ -180,31 +115,26 @@ def consultar_producto(id: int):
 
 @app.post("/productos", status_code=201)
 def recibir_producto(producto: ProductoCrear):
-    # Comprobación de duplicados
-
-    for existente in productos:
-        if existente["nombre"].lower() == producto.nombre.lower():
-            raise HTTPException(
-                status_code=409,
-                detail="El producto ya existe",
+    producto_existente = obtener_producto_por_nombre(producto.nombre)
+    if producto_existente is not None:
+        raise HTTPException(
+            status_code=409,
+            detail="El producto ya existe",
             )
+    try:
+        nuevo_producto = crear_producto(
+            producto.nombre,
+            producto.categoria,
+            producto.precio,
+            producto.stock,
+            )
+        return nuevo_producto
+    except ProductoDuplicadoError:
+        raise HTTPException(
+            status_code=409,
+            detail="El producto ya existe",
+        )
 
-    # Construcción del producto
-
-    nuevo_id = generar_id(productos)
-
-    nuevo_producto = {
-        "id": nuevo_id,
-        "nombre": producto.nombre,
-        "categoria": producto.categoria,
-        "precio": producto.precio,
-        "stock": producto.stock,
-    }
-
-    # Incorporación a la lista
-
-    productos.append(nuevo_producto)
-    return nuevo_producto
 
 
 # PATCH: actualizar precio y/o stock
@@ -223,30 +153,37 @@ def actualizar_producto(id: int, producto: ProductoActualizar):
 
     # Búsqueda y actualización
 
-    producto_existente = obtener_producto_por_id(id, productos)
+    producto_existente = obtener_producto_por_id(id)
     if producto_existente is None:
         raise HTTPException(
             status_code=404,
             detail="Producto no encontrado",
         )
-
-    if "stock" in cambios:
-        producto_existente["stock"] = cambios["stock"]
-
-    if "precio" in cambios:
-        producto_existente["precio"] = cambios["precio"]
-
-    return producto_existente
+    producto_actualizado = aplicar_cambios_producto(producto_existente, cambios)
+    try:
+        guardar_producto_actualizado(producto_actualizado)
+    except ProductoNoEncontradoError:
+        raise HTTPException(
+            status_code=404,
+            detail="Producto no encontrado",
+            )
+    return producto_actualizado
 
 
 # DELETE: eliminar un producto
 
 @app.delete("/productos/{id}", status_code=204)
 def eliminar_producto(id: int):
-    producto_existente = obtener_producto_por_id(id, productos)
+    producto_existente = obtener_producto_por_id(id)
     if producto_existente is None:
         raise HTTPException(
             status_code=404,
             detail="Producto no encontrado",
         )
-    productos.remove(producto_existente)
+    try:
+        eliminar_producto_sqlite(id)
+    except ProductoNoEncontradoError:
+        raise HTTPException(
+            status_code=404,
+            detail="Producto no encontrado",
+            )

@@ -1,3 +1,7 @@
+from pathlib import Path
+
+CARPETA_PROYECTO = Path(__file__).resolve().parent
+RUTA_DB_API = CARPETA_PROYECTO / "productos_api.db"
 RUTA_DB = "productos.db"
 RUTA_LOGS = "logs.txt"
 CATEGORIAS_VALIDAS = ["alimento", "tecnologia", "libreria"]

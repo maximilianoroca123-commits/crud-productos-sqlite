@@ -70,9 +70,3 @@ def obtener_producto_por_id(conexion, id_producto):
     )
     resultado = cursor.fetchone()
     return resultado
-
-def obtener_producto_por_id(id: int, productos):
-    for producto in productos:
-        if producto["id"] == id:
-            return producto
-    return None

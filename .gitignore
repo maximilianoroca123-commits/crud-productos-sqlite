@@ -3,3 +3,6 @@ __pycache__/
 
 productos.db
 logs.txt
+
+productos_api.db
+productos_api_antes_checks.db
